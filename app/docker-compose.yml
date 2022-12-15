@@ -4,9 +4,9 @@ services:
     image: postgres:latest
     restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=football
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     logging:
       options:
         max-size: 10m
@@ -27,6 +27,7 @@ services:
       - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
   python_football_data:
+    env_file: .env
     build:
       context: ./
       dockerfile: Dockerfile_football_data
@@ -43,6 +44,7 @@ services:
       - .:/output
 
   python_report:
+    env_file: .env
     build:
       context: ./
       dockerfile: Dockerfile_report

@@ -3,19 +3,29 @@ import psycopg2
 from sqlalchemy import create_engine
 import logging
 import traceback
-import json
 import requests
 import time
+import datetime
+import os
 
-API_KEY = "d0cad9cfa5974747acd4c5603e4ba8bd"
-API_ENDPOINT = "https://api.football-data.org/v4/"
+API_KEY = os.getenv('API_KEY')
+API_ENDPOINT = os.getenv('API_ENDPOINT', 'https://api.football-data.org/v4/')
+DB_USERNAME = os.getenv('DB_USERNAME')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST', 'host.docker.internal')
+DB_NAME = os.getenv('DB_NAME')
+CONN_STRING = 'postgresql+psycopg2://'+DB_USERNAME + \
+    ':'+DB_PASSWORD+'@'+DB_HOST+'/'+DB_NAME
 
 
-def get_football_data_api(URI, result,):
+def get_football_data_api(URI, result, row_id=''):
+    utc_datetime = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
     try:
         logging.info('----get football data from football-data.org----')
         r = requests.get(API_ENDPOINT+URI, headers={'X-Auth-Token': API_KEY})
         if r.status_code == 200:
+            with open("/output/api_results/"+row_id+result+"_"+utc_datetime+".json", "w") as outfile:
+                outfile.write(str(r.json()))
             return r.json()[result]
         else:
             raise Exception(
@@ -41,7 +51,7 @@ def postgres_upsert(table, conn, keys, data_iter):
 if __name__ == '__main__':
     logging.info('----Runing Script----')
     try:
-        alchemyEngine = create_engine('postgresql+psycopg2://postgres:postgres@host.docker.internal/football', pool_pre_ping=True,
+        alchemyEngine = create_engine(CONN_STRING, pool_pre_ping=True,
                                       pool_recycle=3600,
                                       connect_args={
                                           "keepalives": 1,
@@ -71,7 +81,7 @@ if __name__ == '__main__':
                 uri_end = 'competitions/' + str(row['id']) + '/teams'
                 print('Calling football data api for ' + str(row['id']))
                 teams = pd.DataFrame.from_dict(get_football_data_api(
-                    uri_end, 'teams'))
+                    uri_end, 'teams', str(row['id'])+'_'))
                 if not teams.empty:
                     team_df = teams[['id', 'name']]
                     team_df.to_sql(name='dim_teams', con=dbConnection,
@@ -91,15 +101,9 @@ if __name__ == '__main__':
             logging.error('Error in saving data to postgress' + str(e))
             raise Exception(e)
 
-        # Read data from PostgreSQL database table and load into a DataFrame instance
-        dataFrame = pd.read_sql('SELECT * FROM dim_teams', dbConnection)
-        dataFrame2 = pd.read_sql('SELECT * FROM fact_competitions', dbConnection)
-
-        pd.set_option('display.expand_frame_repr', False)
-
-        print(dataFrame)
-        print(dataFrame2)
         dbConnection.close()
+        logging.info('----Script  Finished----')
+
     except Exception as e:
         logging.error(traceback.print_exc())
         logging.error('Error in SQL' + str(e))

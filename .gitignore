@@ -132,4 +132,5 @@ dmypy.json
 .DS_Store
 
 # football file output
+app/api_results/
 app/output/

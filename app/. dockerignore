@@ -1,0 +1,6 @@
+logs/
+.*
+.git
+.cache
+*.md
+!README.md

@@ -3,10 +3,20 @@ import psycopg2
 from sqlalchemy import create_engine
 import logging
 import traceback
+import datetime
+import os
+
+DB_USERNAME = os.getenv('DB_USERNAME')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST', 'host.docker.internal')
+DB_NAME = os.getenv('DB_NAME')
+CONN_STRING = 'postgresql+psycopg2://'+DB_USERNAME + \
+    ':'+DB_PASSWORD+'@'+DB_HOST+'/'+DB_NAME
 
 if __name__ == '__main__':
+    utc_datetime = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
     try:
-        alchemyEngine = create_engine('postgresql+psycopg2://postgres:postgres@host.docker.internal/football', pool_pre_ping=True,
+        alchemyEngine = create_engine(CONN_STRING, pool_pre_ping=True,
                                       pool_recycle=3600,
                                       connect_args={
                                           "keepalives": 1,
@@ -23,7 +33,7 @@ if __name__ == '__main__':
 
         pd.set_option('display.expand_frame_repr', False)
         dataFrame.to_csv(
-            '/output/output/data_from_football_data_org.csv', index=False)
+            '/output/output/data_from_football_data_org_'+utc_datetime+'.csv', index=False)
         print('\noutput summary: \n{}'.format(dataFrame))
         dbConnection.close()
     except Exception as e:
