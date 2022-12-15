@@ -18,6 +18,11 @@ services:
       # copy the sql script to create tables
       - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
+  python_football_data:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+
 volumes:
   db:
     driver: local
