@@ -13,6 +13,10 @@ services:
         max-file: "3"
     ports:
       - '5432:5432'
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
     volumes:
       - db:/var/lib/postgresql/data
       # copy the sql script to create tables
@@ -22,7 +26,19 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
 
 volumes:
   db:
     driver: local
+
+networks:
+  backend:
