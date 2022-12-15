@@ -16,7 +16,11 @@ services:
     networks:
       - backend
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"
+        ]
     volumes:
       - db:/var/lib/postgresql/data
       # copy the sql script to create tables
@@ -25,7 +29,7 @@ services:
   python_football_data:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile_football_data
     logging:
       options:
         max-size: 10m
@@ -35,6 +39,24 @@ services:
         condition: service_healthy
     networks:
       - backend
+    volumes:
+      - .:/output
+
+  python_report:
+    build:
+      context: ./
+      dockerfile: Dockerfile_report
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    depends_on:
+      python_football_data:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    volumes:
+      - .:/output
 
 volumes:
   db:
