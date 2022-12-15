@@ -16,10 +16,11 @@ CREATE TABLE IF NOT EXISTS dim_competitions (
 CREATE TABLE IF NOT EXISTS fact_competitions (
     competition_id integer NOT NULL,
     team_id integer NOT NULL,
-        CONSTRAINT fk_team
-        FOREIGN KEY(team_id)
-	    REFERENCES dim_teams(id),
-        CONSTRAINT fk_competition
-        FOREIGN KEY(competition_id)
-	    REFERENCES dim_competitions(id)
+        PRIMARY KEY (competition_id, team_id)
+        -- CONSTRAINT fk_team
+        -- FOREIGN KEY(team_id)
+	    -- REFERENCES dim_teams(id),
+        -- CONSTRAINT fk_competition
+        -- FOREIGN KEY(competition_id)
+	    -- REFERENCES dim_competitions(id)
 );
