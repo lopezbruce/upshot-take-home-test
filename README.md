@@ -43,7 +43,7 @@ Once Docker has been installed, .env file has been created under the app folder 
 
 ## Usage
 
-Open a terminal/CMD window and change directory to where football_data_pipeline folder is saved
+Open a terminal/CMD window and change directory to where app folder is saved
 
 ### Run the following command to start the project
 
